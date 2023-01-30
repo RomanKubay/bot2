@@ -1,6 +1,6 @@
 from pymongo import MongoClient
 from datetime import datetime
-from random import randint
+# from random import randint
 import config
 
 # load database
@@ -18,19 +18,27 @@ known_tasks = [ task['word'] for task in tasksdb.find({'type': 'known'}) ]
 whitelist = [ user['_id'] for user in usersdb.find() ]
 blacklist = [ user for user in usersdb.find_one({'_id': 0})['blacklist'] ]
 
-buzy_tasks = {'sort': [], 'heard': [], 'known': []}
+# buzy_tasks = {'sort': [], 'heard': [], 'known': []}
+sorti, heardi = -1, -1
 users_temp_data = {}
 last_actions = []
 
 def get_task_sort(user_id:int):
-    remove_prev_word = get_state(user_id) in buzy_tasks['sort']
-    tasks = [task for task in sort_tasks if not task['word'] in buzy_tasks['sort']]
-    if remove_prev_word: buzy_tasks['sort'].remove(get_state(user_id))
-    if len(tasks) == 0: return None
+    # remove_prev_word = get_state(user_id) in buzy_tasks['sort']
+    # tasks = [task for task in tasksdb.find({'type': 'sort'}) if not task['word'] in buzy_tasks['sort']]
+    # if remove_prev_word: buzy_tasks['sort'].remove(get_state(user_id))
+    # if len(tasks) == 0: return None
     
-    task = tasks[randint(0, len(tasks))]
-    set_state(user_id, task['word'])
-    return task
+    # task = tasks[sorti]
+    # set_state(user_id, task['word'])
+    # return task, len(tasks)
+    global sorti, sort_tasks
+    if sorti >= len(sort_tasks):
+        sort_tasks = [ task for task in tasksdb.find({'type': 'sort'}) ]
+        sorti = -1
+        if len(sort_tasks) == 0: return None
+    sorti += 1
+    return sort_tasks[sorti]
 def sort_word(word:str, level:int, user_id:int):
     l = len(word)
     if tasksdb.find_one({'type': 'sort', 'word': word}) is None: return
@@ -39,14 +47,22 @@ def sort_word(word:str, level:int, user_id:int):
     usersdb.update_one({'_id': user_id}, {'$inc': {'tasks': 1}})
 
 def get_task_heard(user_id:int):
-    remove_prev_word = get_state(user_id) in buzy_tasks['heard']
-    tasks = [task for task in heard_tasks if not task['word'] in buzy_tasks['heard']]
-    if remove_prev_word: buzy_tasks['heard'].remove(get_state(user_id))
-    if len(tasks) == 0: return None
+    # remove_prev_word = get_state(user_id) in buzy_tasks['heard']
+    # tasks = [task for task in tasksdb.find({'type': 'heard'}) if not task['word'] in buzy_tasks['heard']]
+    # if remove_prev_word: buzy_tasks['heard'].remove(get_state(user_id))
+    # if len(tasks) == 0: return None
     
-    task = tasks[randint(0, len(tasks))]
-    set_state(user_id, task['word'])
-    return task
+    # task = tasks[randint(0, len(tasks))]
+    # set_state(user_id, task['word'])
+    # return task, len(tasks)
+    global heardi, heard_tasks
+    if heardi >= len(heard_tasks):
+        heard_tasks = [ task for task in tasksdb.find({'type': 'heard'}) ]
+        heardi = -1
+        if len(heard_tasks) == 0: return None
+    heardi += 1
+    return heard_tasks[heardi]
+
 def heard_word(word:str, level:int, user_id:int):
     l = len(word)
     if tasksdb.find_one({'type': 'heard', 'word': word}) is None: return
@@ -57,12 +73,13 @@ def get_rate_word(word:str, task_type:str) -> int:
     return tasksdb.find_one({'type': task_type, 'word': word})['rate']
 
 def get_task_known(user_id:int):
-    tasks = [task for task in known_tasks if not task['word'] in buzy_tasks['known']]
-    if len(tasks) == 0: return None
+    pass
+    # tasks = [task for task in known_tasks if not task['word'] in buzy_tasks['known']]
+    # if len(tasks) == 0: return None
     
-    task = tasks[randint(0, len(tasks))]
-    set_state(user_id, task['word'])
-    return task
+    # task = tasks[randint(0, len(tasks))]
+    # set_state(user_id, task['word'])
+    # return task
 
 
 def new_task(type:str, word:str, rate:int):

@@ -23,8 +23,8 @@ async def next_sort(user_id:int):
     if task is None:
         await bot.send_message(user_id, f'❌ Помилка!\nСхоже, що завдання закінчились.\nСпробуйте інший режим.', reply_markup=kb.to_menu)
         return
-    if task["rate"] < 1150: maybe = 'складно'
-    elif task["rate"] < 3700: maybe = 'нормально'
+    if task["rate"] < 800: maybe = 'складно'
+    elif task["rate"] < 1150: maybe = 'нормально'
     else: maybe = 'легко'
     msg = await bot.send_message(user_id, f'🗃 <i>Режим сортування ({len(db.sort_tasks)} слів)</i>\n<b>Читайте уважно❗️</b>\n\nКуди відносити слово <b>"{task["word"]}"</b>?\n<i>(Частота: {task["rate"]} | <tg-spoiler>Може {maybe}?</tg-spoiler>)</i>', "HTML", reply_markup=kb.sort(task["word"]))
     db.set_lm(user_id, msg.message_id)
@@ -97,19 +97,17 @@ async def callback(call: types.CallbackQuery):
                     return
                 
                 case 'sort':
-                    await call.message.delete()
                     await next_sort(call.from_user.id)
-                    await db.sort_word(data[2], data[1], call.from_user.id)
-                    await call.answer(f'{data[2]} → {("🟢 Легко", "🟠 Нормально", "🔴 Складно")[int(data[2])]}')
-                    db.add_action(f'🗃 {call.from_user.full_name} → "{data[2]}" до {("🟢 Легко", "🟠 Нормально", "🔴 Складно")[int(data[2])]}')
+                    db.sort_word(data[2], data[1], call.from_user.id)
+                    await call.answer(f'{data[2]} → {("🟢 Легко", "🟠 Нормально", "🔴 Складно")[int(data[1])]}')
+                    db.add_action(f'🗃 {call.from_user.full_name} → "{data[2]}" до {("🟢 Легко", "🟠 Нормально", "🔴 Складно")[int(data[1])]}')
 
                 case 'heard':
-                    await call.message.delete()
                     await next_heard(call.from_user.id)
                     rate = db.get_rate_word(data[2], 'heard')
                     match data[1]:
                         case 'y':
-                            level = rate > 420
+                            level = int(rate > 420)
                             db.heard_word(data[2], level, call.from_user.id)
                             await call.answer(f'{data[2]} → {("🔴 Складно", "🟠 Нормально")[level]}')
                             db.add_action(f'👂🏻 {call.from_user.full_name} чув "{data[2]}". До {("🔴 Складно", "🟠 Нормально")[level]}')
