@@ -25,16 +25,16 @@ async def next_sort(user_id:int):
         return
     if task["rate"] < 800: maybe = 'складно'
     elif task["rate"] < 1150: maybe = 'нормально'
-    else: maybe = 'легко'
-    msg = await bot.send_message(user_id, f'🗃 <i>Режим сортування ({len(db.sort_tasks)} слів)</i>\n<b>Читайте уважно❗️</b>\n\nКуди відносити слово <b>"{task["word"]}"</b>?\n<i>(Частота: {task["rate"]} | <tg-spoiler>Може {maybe}?</tg-spoiler>)</i>', "HTML", reply_markup=kb.sort(task["word"]))
+    else: maybe = 'легко' # ({len(db.sort_tasks)} слів)
+    msg = await bot.send_message(user_id, f'🗃 <i>Режим сортування </i>\n<b>Читайте уважно❗️</b>\n\nКуди відносити слово <b>"{task["word"]}"</b>?\n<i>(Частота: {task["rate"]} | <tg-spoiler>Може {maybe}?</tg-spoiler>)</i>', "HTML", reply_markup=kb.sort(task["word"]))
     db.set_lm(user_id, msg.message_id)
 
 async def next_heard(user_id:int):
     task = db.get_task_heard(user_id)
     if task is None:
         await bot.send_message(user_id, f'❌ Помилка!\nСхоже, що завдання закінчились.\nСпробуйте інший режим.', reply_markup=kb.to_menu)
-        return
-    msg = await bot.send_message(user_id, f'👂🏻 <i>Режим "Чули слово ..?" ({len(db.heard_tasks)} слів)</i>\n<b>Читайте уважно❗️</b>\n\nВи колись чули слово <b>"{task["word"]}"</b>?\n<i>(Частота: {task["rate"]})</i>', "HTML", reply_markup=kb.heard(task["word"]))
+        return # ({len(db.heard_tasks)} слів)
+    msg = await bot.send_message(user_id, f'👂🏻 <i>Режим "Чули слово ..?"</i>\n<b>Читайте уважно❗️</b>\n\nВи колись чули слово <b>"{task["word"]}"</b>?\n<i>(Частота: {task["rate"]})</i>', "HTML", reply_markup=kb.heard(task["word"]))
     db.set_lm(user_id, msg.message_id)
 
 async def send_last_actions(user_id:int, full:bool=False):
@@ -107,12 +107,12 @@ async def callback(call: types.CallbackQuery):
                     rate = db.get_rate_word(data[2], 'heard')
                     match data[1]:
                         case 'y':
-                            level = int(rate > 420)
+                            level = int(rate > 200)
                             db.heard_word(data[2], level, call.from_user.id)
                             await call.answer(f'{data[2]} → {("🔴 Складно", "🟠 Нормально")[level]}')
                             db.add_action(f'👂🏻 {call.from_user.full_name} чув "{data[2]}". До {("🔴 Складно", "🟠 Нормально")[level]}')
                         case 'n':
-                            if rate > 420:
+                            if rate > 180:
                                 db.heard_word(data[2], 0, call.from_user.id)
                                 db.add_action(f'👂🏻 {call.from_user.full_name} ніколи не чув "{data[2]}". До 🔴 Складно')
                                 await call.answer(f'{data[2]} → 🔴 Складно')
@@ -137,7 +137,8 @@ async def callback(call: types.CallbackQuery):
                         case 'reject':
                             await bot.send_message(int(data[2]), '⛔️ Вибачте, але Вашу заявку було відхилено(', reply_markup=kb.close)
                  
-    await call.message.delete()
+    try: await call.message.delete()
+    except: pass
 
 async def del_last_msg(user_id:int):
     msg = db.get_lm(user_id)
