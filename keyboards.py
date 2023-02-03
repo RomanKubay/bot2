@@ -2,12 +2,12 @@ from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeybo
 
 back = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton('◄ Назад', callback_data='menu')]])
 to_menu = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton('◄ Перейти до меню', callback_data='menu')]])
-close = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton('❌ Закрити', callback_data="close")]])
+close = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton('❌ Закрити', callback_data='close')]])
 whitelist_add_me = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton('🙋🏾 Подати заявку', callback_data="whitelist_addme")]])
 def whitelist(user):
     return InlineKeyboardMarkup(inline_keyboard=
         [
-            [InlineKeyboardButton(f'✅ Прийняти {user.full_name}', callback_data=f"whitelist_accept_{user.id}_{user.full_name}_{user.username}")],
+            [InlineKeyboardButton(f'✅ Прийняти {user.full_name}', callback_data=f"whitelist_accept_{user.id}_{user.username}")],
             [InlineKeyboardButton(f'⛔️ Відхилити', callback_data=f"whitelist_reject_{user.id}")],
         ])
 
@@ -65,7 +65,7 @@ def reload(reload_data:str):
         [
             [
                 InlineKeyboardButton('🔁 Оновити', callback_data=reload_data),
-                InlineKeyboardButton('◄ Назад', callback_data="back")
+                InlineKeyboardButton('❌ Закрити', callback_data='close')
             ]
         ])
 
@@ -75,5 +75,5 @@ last = InlineKeyboardMarkup(inline_keyboard=
                 InlineKeyboardButton('🔁 Оновити', callback_data="last"),
                 InlineKeyboardButton('↕️ Більше', callback_data="last_full")
             ],
-            [InlineKeyboardButton('◄ Назад', callback_data="back")]
+            [InlineKeyboardButton('❌ Закрити', callback_data='close')]
         ])

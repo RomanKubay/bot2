@@ -86,15 +86,14 @@ def new_task(type:str, word:str, rate:int):
     tasksdb.insert_one({'type': type, 'word': word, 'rate': rate, 'wordleng': len(word)})
 def delete_task(filter): tasksdb.delete_one(filter)
 
-def get_user(user_id:int):
-    return usersdb.find_one({'_id': user_id})
-def get_all_users():
-    return usersdb.find({"_id": { "$gt": 1 }})
 
 def new_user(id:int, name:str, username:str):
     if not usersdb.find_one({'_id': id}) is None: return
     usersdb.insert_one({'_id': id, 'name': name, 'username': username, 'tasks': 0})
     whitelist.append(id)
+def get_user(user_id:int): return usersdb.find_one({'_id': user_id})
+def get_all_users(): return usersdb.find({"_id": { "$gt": 1 }})
+def update_user(user): return usersdb.update_one({'_id': user.id}, {'$set': {'name': user.full_name, 'username': user.username}})
 
 def get_user_temp(user_id:int) -> dict:
     if not user_id in users_temp_data:
@@ -112,6 +111,22 @@ def get_stats():
         stats[t] = tasksdb.count_documents({'type': t})
         words_count += stats[t]
     stats['words'] = words_count
+
+    words = wordsdb.find({"_id": { "$gt": 0 }}); print(len(words))
+    easy_split, normal_split, hard_split = [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]
+    stats['easy']=0; stats['normal']=0; stats['hard']=0; stats['saved']=0
+    for i in range(6):
+        easy_split[i] = len(words[i][0])
+        normal_split[i] = len(words[i][1])
+        hard_split[i] = len(words[i][2])
+        stats['easy'] += easy_split[i]
+        stats['normal'] += normal_split[i]
+        stats['hard'] += hard_split[i]
+        stats['saved'] += easy_split[i]+normal_split[i]+hard_split[i]
+    stats['easy_split'] = [easy_split[i] for i in range(6)]
+    stats['normal_split'] = [normal_split[i] for i in range(6)]
+    stats['hard_split'] = [hard_split[i] for i in range(6)]
+    stats['saved_split'] = [easy_split[i]+normal_split[i]+hard_split[i] for i in range(6)]
 
     users = []
     complete_count = 0
