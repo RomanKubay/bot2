@@ -6,4 +6,4 @@ MONGODB_HOST = os.environ['MONGODB_HOST']
 
 DEV_TG_NICKNAME = "thisRomana"
 max_history_leng = 25
-max_history_leng_full = 150
+max_history_leng_full = 140
