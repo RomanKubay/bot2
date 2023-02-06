@@ -15,7 +15,7 @@ print("Скачуємо всі необхідні дані...")
 sort_tasks = [ task for task in tasksdb.find({'type': 'sort'}) ]
 heard_tasks = [ task for task in tasksdb.find({'type': 'heard'}) ]
 known_tasks = [ task['word'] for task in tasksdb.find({'type': 'known'}) ]
-whitelist = [ user['_id'] for user in usersdb.find() ]
+whitelist = [ user['_id'] for user in usersdb.find({"_id": { "$gt": 0 }}) ]
 blacklist = [ user for user in usersdb.find_one({'_id': 0})['blacklist'] ]
 
 # buzy_tasks = {'sort': [], 'heard': [], 'known': []}
@@ -94,6 +94,14 @@ def new_user(id:int, name:str, username:str):
 def get_user(user_id:int): return usersdb.find_one({'_id': user_id})
 def get_all_users(): return usersdb.find({"_id": { "$gt": 1 }})
 def update_user(user): return usersdb.update_one({'_id': user.id}, {'$set': {'name': user.full_name, 'username': user.username}})
+def ban_user(user_id:int):
+    if user_id in blacklist: return
+    blacklist.append(user_id)
+    usersdb.update_one({'_id': 0}, {'$push': {'blacklist': user_id}})
+def unban_user(user_id:int):
+    if not user_id in blacklist: return
+    blacklist.remove(user_id)
+    usersdb.update_one({'_id': 0}, {'$pull': {'blacklist': user_id}})
 
 def get_user_temp(user_id:int) -> dict:
     if not user_id in users_temp_data:
@@ -112,13 +120,13 @@ def get_stats():
         words_count += stats[t]
     stats['words'] = words_count
 
-    words = wordsdb.find({"_id": { "$gt": 0 }}); print(len(words))
+    words = wordsdb.find({"_id": { "$gt": 0 }})#; print(len(list(words)))
     easy_split, normal_split, hard_split = [0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]
     stats['easy']=0; stats['normal']=0; stats['hard']=0; stats['saved']=0
     for i in range(6):
-        easy_split[i] = len(words[i][0])
-        normal_split[i] = len(words[i][1])
-        hard_split[i] = len(words[i][2])
+        easy_split[i] = len(words[i]['0'])
+        normal_split[i] = len(words[i]['1'])
+        hard_split[i] = len(words[i]['2'])
         stats['easy'] += easy_split[i]
         stats['normal'] += normal_split[i]
         stats['hard'] += hard_split[i]
@@ -130,9 +138,11 @@ def get_stats():
 
     users = []
     complete_count = 0
-    for u in usersdb.find({"_id": { "$gt": 1 }}):
-        users.append([u['name'], u['tasks']])
-        complete_count += u['tasks']
+    lst = [(u['name'], u['tasks']) for u in usersdb.find({"_id": { "$gt": 1 }})]
+    lst.sort(key=secondElement, reverse=True)
+    for u in lst:
+        users.append(u)
+        complete_count += u[1]
     stats['users'] = users
     stats['complete'] = complete_count
 
@@ -160,6 +170,8 @@ def get_last_actions(full:bool=False) -> str:
             i += 1
             if i > config.max_history_leng: break
     return text
+
+def secondElement(_): return _[1]
 
 # Цей код щось додасть до всіх користувачів
 #users.update_many({"_id": { "$gt": 1 }}, {"$set": { f"settings.send": 1 }})

@@ -68,12 +68,19 @@ def reload(reload_data:str):
                 InlineKeyboardButton('❌ Закрити', callback_data='close')
             ]
         ])
-
+        
 last = InlineKeyboardMarkup(inline_keyboard=
         [
             [
                 InlineKeyboardButton('🔁 Оновити', callback_data="last"),
                 InlineKeyboardButton('↕️ Більше', callback_data="last_full")
             ],
-            [InlineKeyboardButton('❌ Закрити', callback_data='close')]
+            [InlineKeyboardButton('◄ Назад', callback_data='menu')]
+        ])
+last_full = InlineKeyboardMarkup(inline_keyboard=
+        [
+            [
+                InlineKeyboardButton('🔁 Оновити', callback_data='last'),
+                InlineKeyboardButton('◄ Назад', callback_data='menu')
+            ]
         ])
